@@ -82,6 +82,10 @@ This combo makes rep+ handy for bug bounty hunters and vulnerability researchers
 
 [![Star History Chart](https://api.star-history.com/svg?repos=bscript/rep&type=date&legend=top-left)](https://www.star-history.com/#bscript/rep&type=date&legend=top-left)
 
+## Found a Bug or Issue?
+
+If you encounter any bugs, unexpected behavior, or have feature requests, please help me improve **rep+** by [opening an issue here](https://github.com/bscript/rep/issues).  
+I’ll do my best to address it as quickly as possible! 🙏
 
 ## ❤️ Support the Project
 
