@@ -13,6 +13,11 @@
     <img src="https://img.shields.io/github/stars/bscript/rep?style=social" alt="GitHub Stars">
   </a>
 
+   <!-- Discord -->
+  <a href="https://discord.gg/rMcKHSbG">
+        <img src="https://img.shields.io/discord/1442955541293961429.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2" alt="Discord">
+  </a>
+
   <!-- Sponsor -->
   <a href="https://github.com/sponsors/bscript">
     <img src="https://img.shields.io/badge/Sponsor-%F0%9F%92%96-ea4aaa?style=flat-square" alt="Sponsor">
