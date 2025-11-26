@@ -38,6 +38,7 @@ rep+ is a lightweight Chrome DevTools extension inspired by Burp Suite's Repeate
   - **Global Visibility**: Monitor traffic across your entire browser session.
   - **Visual Indicators**: Requests from other tabs are marked with a globe icon 🌍 for easy distinction.
   - **Smart Filtering**: Automatically deduplicates requests to keep your workspace clean.
+  - **Privacy First (Optional Permissions)**: Broad permissions (`webRequest`, `<all_urls>`) are **NOT** granted by default. They are requested at **runtime** only when you explicitly click the globe icon to enable this feature. This ensures rep+ remains lightweight and respects your privacy until you need the extra power.
 - **Filters & Regex**: Powerful search across URL, headers, and body. Toggle **Regex Mode** for advanced pattern matching (e.g., finding specific tokens or IDs).
 - **Converters**: Right-click context menu to instantly encode/decode data:
   - Base64

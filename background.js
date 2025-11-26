@@ -52,83 +52,106 @@ function parseRequestBody(requestBody) {
     return null;
 }
 
-// 1. Capture Request Method, URL, Body
-chrome.webRequest.onBeforeRequest.addListener(
-    (details) => {
-        if (ports.size === 0) return;
+// Listener functions
+function handleBeforeRequest(details) {
+    if (ports.size === 0) return;
+    if (details.url.startsWith('chrome-extension://')) return;
 
-        // Filter out extension requests
-        if (details.url.startsWith('chrome-extension://')) return;
+    requestMap.set(details.requestId, {
+        requestId: details.requestId,
+        url: details.url,
+        method: details.method,
+        type: details.type,
+        timeStamp: Date.now(),
+        requestBody: parseRequestBody(details.requestBody),
+        tabId: details.tabId
+    });
+}
 
-        requestMap.set(details.requestId, {
-            requestId: details.requestId,
-            url: details.url,
-            method: details.method,
-            type: details.type,
-            timeStamp: Date.now(),
-            requestBody: parseRequestBody(details.requestBody),
-            tabId: details.tabId
+function handleBeforeSendHeaders(details) {
+    if (ports.size === 0) return;
+    const req = requestMap.get(details.requestId);
+    if (req) {
+        req.requestHeaders = details.requestHeaders;
+    }
+}
+
+function handleCompleted(details) {
+    if (ports.size === 0) return;
+    const req = requestMap.get(details.requestId);
+    if (req) {
+        req.statusCode = details.statusCode;
+        req.statusLine = details.statusLine;
+        req.responseHeaders = details.responseHeaders;
+
+        const message = {
+            type: 'captured_request',
+            data: req
+        };
+
+        ports.forEach(p => {
+            try {
+                p.postMessage(message);
+            } catch (e) {
+                console.error('Error sending to port:', e);
+                ports.delete(p);
+            }
         });
-    },
-    { urls: ["<all_urls>"] },
-    ["requestBody"]
-);
 
-// 2. Capture Request Headers
-chrome.webRequest.onBeforeSendHeaders.addListener(
-    (details) => {
-        if (ports.size === 0) return;
-
-        const req = requestMap.get(details.requestId);
-        if (req) {
-            req.requestHeaders = details.requestHeaders;
-        }
-    },
-    { urls: ["<all_urls>"] },
-    ["requestHeaders"]
-);
-
-// 3. Capture Response Headers & Status, then Send
-chrome.webRequest.onCompleted.addListener(
-    (details) => {
-        if (ports.size === 0) return;
-
-        const req = requestMap.get(details.requestId);
-        if (req) {
-            req.statusCode = details.statusCode;
-            req.statusLine = details.statusLine; // HTTP/1.1 200 OK
-            req.responseHeaders = details.responseHeaders;
-
-            // Send to all connected panels
-            const message = {
-                type: 'captured_request',
-                data: req
-            };
-
-            ports.forEach(p => {
-                try {
-                    p.postMessage(message);
-                } catch (e) {
-                    console.error('Error sending to port:', e);
-                    ports.delete(p);
-                }
-            });
-
-            // Cleanup
-            requestMap.delete(details.requestId);
-        }
-    },
-    { urls: ["<all_urls>"] },
-    ["responseHeaders"]
-);
-
-// Cleanup on error
-chrome.webRequest.onErrorOccurred.addListener(
-    (details) => {
         requestMap.delete(details.requestId);
-    },
-    { urls: ["<all_urls>"] }
-);
+    }
+}
+
+function handleErrorOccurred(details) {
+    requestMap.delete(details.requestId);
+}
+
+function setupListeners() {
+    if (chrome.webRequest) {
+        if (!chrome.webRequest.onBeforeRequest.hasListener(handleBeforeRequest)) {
+            chrome.webRequest.onBeforeRequest.addListener(
+                handleBeforeRequest,
+                { urls: ["<all_urls>"] },
+                ["requestBody"]
+            );
+        }
+        if (!chrome.webRequest.onBeforeSendHeaders.hasListener(handleBeforeSendHeaders)) {
+            chrome.webRequest.onBeforeSendHeaders.addListener(
+                handleBeforeSendHeaders,
+                { urls: ["<all_urls>"] },
+                ["requestHeaders"]
+            );
+        }
+        if (!chrome.webRequest.onCompleted.hasListener(handleCompleted)) {
+            chrome.webRequest.onCompleted.addListener(
+                handleCompleted,
+                { urls: ["<all_urls>"] },
+                ["responseHeaders"]
+            );
+        }
+        if (!chrome.webRequest.onErrorOccurred.hasListener(handleErrorOccurred)) {
+            chrome.webRequest.onErrorOccurred.addListener(
+                handleErrorOccurred,
+                { urls: ["<all_urls>"] }
+            );
+        }
+        console.log("WebRequest listeners registered");
+    } else {
+        console.log("WebRequest permission not granted");
+    }
+}
+
+// Initial setup
+setupListeners();
+
+// Listen for permission changes
+if (chrome.permissions) {
+    chrome.permissions.onAdded.addListener((permissions) => {
+        if (permissions.permissions && permissions.permissions.includes('webRequest')) {
+            setupListeners();
+        }
+    });
+}
 
 // Periodic cleanup of stale requests (older than 1 minute)
 setInterval(() => {

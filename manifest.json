@@ -7,10 +7,14 @@
     "permissions": [
         "activeTab",
         "scripting",
-        "storage",
-        "webRequest"
+        "storage"
     ],
-    "host_permissions": [
+    "optional_permissions": [
+        "webRequest",
+        "webRequestBlocking"
+    ],
+    "host_permissions": [],
+    "optional_host_permissions": [
         "<all_urls>"
     ],
     "icons": {

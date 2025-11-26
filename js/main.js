@@ -81,17 +81,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Setup Multi-tab Capture (Background Script)
-    function connectToBackground() {
-        try {
-            const port = chrome.runtime.connect({ name: "rep-panel" });
-            console.log("Connected to background service worker");
+    // Multi-tab Capture Logic
+    const multiTabBtn = document.getElementById('multi-tab-btn');
+    let backgroundPort = null;
+    let isConnecting = false;
 
-            port.onMessage.addListener((msg) => {
+    function updateMultiTabIcon(enabled) {
+        if (!multiTabBtn) return;
+        if (enabled) {
+            multiTabBtn.classList.add('active');
+            multiTabBtn.title = "Multi-tab Capture Enabled (Click to disable)";
+            multiTabBtn.style.color = 'var(--accent-color)';
+        } else {
+            multiTabBtn.classList.remove('active');
+            multiTabBtn.title = "Enable Multi-tab Capture";
+            multiTabBtn.style.color = '';
+        }
+    }
+
+    function connectToBackground() {
+        if (backgroundPort || isConnecting) return;
+        isConnecting = true;
+
+        try {
+            backgroundPort = chrome.runtime.connect({ name: "rep-panel" });
+            console.log("Connected to background service worker");
+            isConnecting = false;
+
+            backgroundPort.onMessage.addListener((msg) => {
                 if (msg.type === 'captured_request') {
                     const req = msg.data;
 
                     // Skip requests from the current inspected tab (handled by setupNetworkListener)
-                    // We check both tabId and if the URL matches the current inspected window URL (approximate)
                     if (req.tabId === chrome.devtools.inspectedWindow.tabId) return;
 
                     // Convert to HAR-like format
@@ -132,18 +153,86 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            port.onDisconnect.addListener(() => {
-                console.log("Disconnected from background, retrying in 2s...");
-                setTimeout(connectToBackground, 2000);
+            backgroundPort.onDisconnect.addListener(() => {
+                console.log("Disconnected from background");
+                backgroundPort = null;
+                isConnecting = false;
+
+                // Only retry if permissions are still granted
+                chrome.permissions.contains({
+                    permissions: ['webRequest'],
+                    origins: ['<all_urls>']
+                }, (result) => {
+                    if (result) {
+                        console.log("Retrying connection in 2s...");
+                        setTimeout(connectToBackground, 2000);
+                    } else {
+                        updateMultiTabIcon(false);
+                    }
+                });
             });
 
         } catch (e) {
             console.error('Failed to connect to background script:', e);
+            backgroundPort = null;
+            isConnecting = false;
             setTimeout(connectToBackground, 2000);
         }
     }
 
-    connectToBackground();
+    function disconnectBackground() {
+        if (backgroundPort) {
+            backgroundPort.disconnect();
+            backgroundPort = null;
+        }
+    }
+
+    // Check initial status
+    chrome.permissions.contains({
+        permissions: ['webRequest'],
+        origins: ['<all_urls>']
+    }, (result) => {
+        if (result) {
+            updateMultiTabIcon(true);
+            connectToBackground();
+        } else {
+            updateMultiTabIcon(false);
+        }
+    });
+
+    // Toggle button handler
+    if (multiTabBtn) {
+        multiTabBtn.addEventListener('click', () => {
+            chrome.permissions.contains({
+                permissions: ['webRequest'],
+                origins: ['<all_urls>']
+            }, (result) => {
+                if (result) {
+                    // Disable: Remove permissions
+                    chrome.permissions.remove({
+                        permissions: ['webRequest'],
+                        origins: ['<all_urls>']
+                    }, (removed) => {
+                        if (removed) {
+                            updateMultiTabIcon(false);
+                            disconnectBackground();
+                        }
+                    });
+                } else {
+                    // Enable: Request permissions
+                    chrome.permissions.request({
+                        permissions: ['webRequest'],
+                        origins: ['<all_urls>']
+                    }, (granted) => {
+                        if (granted) {
+                            updateMultiTabIcon(true);
+                            connectToBackground();
+                        }
+                    });
+                }
+            });
+        });
+    }
 
     // Setup UI Components
     setupResizeHandle();
