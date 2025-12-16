@@ -3,7 +3,7 @@ import { state } from '../core/state.js';
 import { getHostname, highlightHTTP } from '../core/utils/network.js';
 import { events, EVENT_NAMES } from '../core/events.js';
 import { filterRequests } from './request-list.js';
-import { selectRequest, switchRequestView, switchResponseView, toggleLayout } from './request-editor.js';
+import { selectRequest, switchRequestView, switchResponseView, toggleLayout, initPreviewControls, updatePreview } from './request-editor.js';
 import { updateHistoryButtons } from './ui-utils.js';
 import { generateHexView } from './hex-view.js';
 import { generateJsonView } from './json-view.js';
@@ -355,6 +355,12 @@ function setupEventListeners() {
             elements.jsonResponseDisplay.innerHTML = '';
             elements.jsonResponseDisplay.appendChild(generateJsonView(content));
         }
+
+        // Update preview if it's currently active
+        const previewView = document.getElementById('res-view-preview');
+        if (previewView && previewView.style.display !== 'none' && previewView.classList.contains('active')) {
+            updatePreview(content || '');
+        }
     });
 
     // Get request content
@@ -444,6 +450,6 @@ function setupEventListeners() {
 
 // Re-export everything from split modules
 export { renderRequestList, renderRequestItem, filterRequests, createRequestItemElement, createPageGroup, createDomainGroup } from './request-list.js';
-export { selectRequest, switchRequestView, switchResponseView, toggleLayout } from './request-editor.js';
+export { selectRequest, switchRequestView, switchResponseView, toggleLayout, initPreviewControls } from './request-editor.js';
 export { toggleStar, toggleGroupStar, setTimelineFilter, toggleAllGroups, getFilteredRequests, setRequestColor } from './request-actions.js';
 export { updateHistoryButtons, clearAllRequestsUI, setupResizeHandle, toggleAllObjects, setupSidebarResize, setupContextMenu, setupUndoRedo, captureScreenshot, exportRequests, importRequests } from './ui-utils.js';

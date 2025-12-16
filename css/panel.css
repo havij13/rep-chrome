@@ -2596,6 +2596,25 @@ pre {
     display: flex !important;
 }
 
+/* Preview view specific styles */
+#res-view-preview {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: white;
+}
+
+.preview-controls {
+    flex-shrink: 0;
+    background: var(--sidebar-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+#response-preview-iframe {
+    flex: 1;
+    min-height: 0;
+}
+
 /* Raw Editor */
 .raw-editor {
     font-family: 'Menlo', 'Monaco', 'Courier New', monospace;

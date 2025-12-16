@@ -317,32 +317,50 @@ export function createRequestItemElement(request, index, categoryData) {
 
         const commit = () => {
             const newName = input.value.trim();
+            // Validate request exists before updating
+            if (index < 0 || index >= state.requests.length || !state.requests[index]) {
+                console.warn(`Cannot rename: Request at index ${index} does not exist`);
+                cancel();
+                return;
+            }
+            const request = state.requests[index];
+            if (!request || !request.request) {
+                // Request was removed, restore original label
+                urlSpan.innerHTML = '';
+                urlSpan.appendChild(document.createTextNode(currentLabel));
+                return;
+            }
             // Update state
-            state.requests[index].name = newName || null;
+            request.name = newName || null;
 
             // Re-render label
             urlSpan.innerHTML = '';
             const finalLabel = newName || ((() => {
                 try {
-                    const urlObj = new URL(state.requests[index].request.url);
-                    return urlObj.pathname + urlObj.search || state.requests[index].request.url;
+                    const urlObj = new URL(request.request.url);
+                    return urlObj.pathname + urlObj.search || request.request.url;
                 } catch {
-                    return state.requests[index].request.url;
+                    return request.request.url;
                 }
             })());
             urlSpan.appendChild(document.createTextNode(finalLabel));
             urlSpan.title = newName
-                ? `${newName} — ${state.requests[index].request.url}`
-                : state.requests[index].request.url;
+                ? `${newName} — ${request.request.url}`
+                : request.request.url;
         };
 
         const cancel = () => {
             // Restore original label without changing state
             urlSpan.innerHTML = '';
             urlSpan.appendChild(document.createTextNode(currentLabel));
-            urlSpan.title = state.requests[index].name
-                ? `${state.requests[index].name} — ${state.requests[index].request.url}`
-                : state.requests[index].request.url;
+            // Only set title if request still exists
+            if (index >= 0 && index < state.requests.length && state.requests[index]) {
+                urlSpan.title = state.requests[index].name
+                    ? `${state.requests[index].name} — ${state.requests[index].request.url}`
+                    : state.requests[index].request.url;
+            } else {
+                urlSpan.title = currentLabel;
+            }
         };
 
         input.addEventListener('keydown', (ev) => {
