@@ -200,6 +200,16 @@ export function setupUndoRedo() {
         const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
         const modKey = isMac ? e.metaKey : e.ctrlKey;
 
+        // Hotkey: Ctrl/Cmd + Enter → Send request
+        if (modKey && e.key === 'Enter') {
+            e.preventDefault();
+            if (elements.sendBtn) {
+                elements.sendBtn.click();
+            }
+            return;
+        }
+
+        // Hotkeys: Undo / Redo
         if (modKey && e.key === 'z' && !e.shiftKey && !e.altKey) {
             e.preventDefault();
             undo();

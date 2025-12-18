@@ -256,6 +256,18 @@ export function initUI() {
             elements.rawRequestInput.innerText = rawReqTextarea.value;
             // Trigger highlight update if needed, or just keep sync
         });
+
+        // Hotkey: Ctrl/Cmd + Enter in raw textarea → Send request
+        rawReqTextarea.addEventListener('keydown', (e) => {
+            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+            const modKey = isMac ? e.metaKey : e.ctrlKey;
+            if (modKey && e.key === 'Enter') {
+                e.preventDefault();
+                if (elements.sendBtn) {
+                    elements.sendBtn.click();
+                }
+            }
+        });
     }
 
     // Layout Toggle
