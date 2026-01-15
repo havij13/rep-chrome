@@ -5066,9 +5066,9 @@ pre {
 
 .llm-chat-apply-send-btn {
     padding: 6px 12px;
-    background: var(--primary-color);
-    color: #fff;
-    border: 1px solid var(--primary-color);
+    background: var(--accent-color);
+    color: #000;
+    border: 1px solid var(--accent-color);
     border-radius: var(--radius-sm);
     font-size: 12px;
     font-weight: 500;
@@ -5078,10 +5078,11 @@ pre {
 }
 
 .llm-chat-apply-send-btn:hover:not(:disabled) {
-    background: var(--primary-color);
-    filter: brightness(1.1);
+    background: var(--accent-color);
+    filter: brightness(1.2);
+    opacity: 1;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .llm-chat-apply-send-btn:active:not(:disabled) {

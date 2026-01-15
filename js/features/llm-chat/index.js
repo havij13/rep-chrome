@@ -895,7 +895,7 @@ export function setupLLMChat(elements) {
                                 // Add Apply & Send button
                                 const sendButton = document.createElement('button');
                                 sendButton.className = 'llm-chat-apply-send-btn';
-                                sendButton.textContent = 'Apply & Send';
+                                sendButton.textContent = 'Apply Request & Send';
                                 sendButton.title = 'Apply changes and send request immediately';
                                 
                                 sendButton.onclick = async () => {
